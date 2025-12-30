@@ -1,26 +1,49 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #efeae2; /* צבע רקע וואטסאפ */
+  --foreground: #111827;
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--background);
+  font-family: var(--font-rubik), sans-serif;
+  
+  /* חווית מובייל: מניעת גלילה קפיצית */
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* התאמה למגרעת של אייפון (Notch) */
+.safe-area-view {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ביטול סימון טקסט בלחיצה ארוכה (תחושת אפליקציה) */
+* {
+  -webkit-tap-highlight-color: transparent; /* ביטול הבהוב כחול בלחיצה */
+  -webkit-touch-callout: none;
+  user-select: none; /* מונע בחירת טקסט */
+}
+
+/* אפשור בחירת טקסט רק בתיבות קלט */
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* הסתרת פס גלילה אבל השארת יכולת לגלול */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
