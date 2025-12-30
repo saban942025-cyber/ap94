@@ -18,9 +18,6 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Saban Systems",
   },
-  formatDetection: {
-    telephone: false,
-  },
 };
 
 export const viewport: Viewport = {
@@ -51,29 +48,17 @@ export default function RootLayout({
               await OneSignal.init({
                 appId: "07b81f2e-e812-424f-beca-36584b12ccf2",
                 safari_web_id: "web.onesignal.auto.bf4567-your-safari-id",
-                notifyButton: {
-                  enable: true,
-                  colors: {
-                    'circle.background': 'rgb(220, 38, 38)',
-                    'circle.foreground': 'white',
-                    'badge.background': 'rgb(220, 38, 38)',
-                    'badge.foreground': 'white',
-                    'badge.bordercolor': 'white',
-                    'pulse.color': 'white',
-                    'dialog.button.background.hovering': 'rgb(200, 30, 30)',
-                    'dialog.button.background.active': 'rgb(200, 30, 30)',
-                    'dialog.button.background': 'rgb(220, 38, 38)',
-                    'dialog.button.foreground': 'white'
-                  },
-                },
-                allowLocalhostAsSecureOrigin: true,
+                notifyButton: { enable: true },
               });
             });
           `}
         </Script>
       </head>
-      <body className={`${rubik.className} antialiased safe-area-view`}>
-        {children}
+      <body className={`${rubik.className} antialiased bg-[#e5ddd5]`}>
+        {/* זו המעטפת שתכריח את האתר להיראות כמו אפליקציה גם במחשב */}
+        <div className="max-w-md mx-auto min-h-screen bg-[#efeae2] shadow-2xl overflow-x-hidden relative">
+          {children}
+        </div>
       </body>
     </html>
   );
