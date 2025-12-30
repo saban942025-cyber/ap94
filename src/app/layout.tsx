@@ -1,31 +1,19 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
+// הגדרת פונט רוביק לתמיכה מלאה בעברית
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
   variable: "--font-rubik",
+  weight: ["300", "400", "500", "700"],
 });
 
 export const metadata: Metadata = {
   title: "Saban Systems",
   description: "מערכת ניהול הזמנות חכמה",
   manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Saban Systems",
-  },
-};
-
-// הגדרות תצוגה למובייל - חוסם זום והופך לאפליקציה מלאה
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: "#008069",
 };
 
 export default function RootLayout({
@@ -36,11 +24,14 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
+        {/* טעינת הסקריפט הראשי של OneSignal */}
         <Script 
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" 
           defer 
           strategy="afterInteractive" 
         />
+        
+        {/* אתחול OneSignal עם ה-ID שלך */}
         <Script id="onesignal-init" strategy="afterInteractive">
           {`
             window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -69,7 +60,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${rubik.className} antialiased safe-area-view`}>
+      <body className={`${rubik.className} antialiased`}>
         {children}
       </body>
     </html>
