@@ -3,43 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --background: #efeae2; /* צבע רקע מותאם אישית */
+  --background: #efeae2; /* צבע רקע מקורי (קרם/וואטסאפ) */
   --foreground: #111827;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-rubik), sans-serif;
-  
-  /* חווית מובייל: מניעת גלילה קפיצית */
-  overscroll-behavior-y: none;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--font-rubik), sans-serif; /* שימוש בפונט רוביק */
+  direction: rtl; /* יישור לימין כברירת מחדל */
 }
 
-/* התאמה למגרעת של אייפון (Notch) */
-.safe-area-view {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-}
-
-/* ביטול סימון טקסט בלחיצה ארוכה (תחושת אפליקציה) */
-* {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
-/* אפשור בחירת טקסט רק בתיבות קלט */
-input, textarea {
-  user-select: text;
-  -webkit-user-select: text;
-}
-
-/* הסתרת פס גלילה אבל השארת יכולת לגלול */
+/* הסתרת פס גלילה לאסתטיקה, אך משאיר גלילה פעילה */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
