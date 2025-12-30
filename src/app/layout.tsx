@@ -1,9 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
-// הגדרת פונט רוביק לתמיכה מלאה בעברית
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
   variable: "--font-rubik",
@@ -14,6 +13,23 @@ export const metadata: Metadata = {
   title: "Saban Systems",
   description: "מערכת ניהול הזמנות חכמה",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent", // סרגל סטטוס שקוף/משתלב
+    title: "Saban Systems",
+  },
+  formatDetection: {
+    telephone: false, // מניעת הפיכת מספרים ללינקים כחולים אוטומטית
+  },
+};
+
+// הגדרות תצוגה למובייל - חוסם זום והופך לאפליקציה מלאה
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // זה הקסם שנותן תחושת אפליקציה (מונע זום)
+  themeColor: "#008069", // צבע הבר העליון באנדרואיד
 };
 
 export default function RootLayout({
@@ -24,14 +40,11 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
-        {/* טעינת הסקריפט הראשי של OneSignal */}
         <Script 
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" 
           defer 
           strategy="afterInteractive" 
         />
-        
-        {/* אתחול OneSignal עם ה-ID שלך */}
         <Script id="onesignal-init" strategy="afterInteractive">
           {`
             window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -60,7 +73,8 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${rubik.className} antialiased`}>
+      {/* הוספת safe-area-view לטיפול במגרעות של אייפון */}
+      <body className={`${rubik.className} antialiased safe-area-view`}>
         {children}
       </body>
     </html>
