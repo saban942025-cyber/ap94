@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #efeae2; /* צבע הקרם המקצועי (דמוי וואטסאפ) */
+  /* צבע הרקע המקצועי (גוון קרם נעים לעין, כמו בוואטסאפ העסקי) */
+  --background: #efeae2;
   --foreground: #111827;
 }
 
@@ -12,15 +13,15 @@ body {
   background: var(--background);
   font-family: var(--font-rubik), sans-serif;
   
-  /* מונע אפקט "קפיצה" בגלילה מעבר לגבולות (באנדרואיד/כרום) */
+  /* מניעת "קפיצות" גלילה בדפדפן (Overscroll) */
   overscroll-behavior-y: none;
   
-  /* החלקת פונטים לתצוגה חדה */
+  /* החלקת פונטים לקריאות מקסימלית במסכים שונים */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* טיפול באזור הבטוח (Safe Area) למכשירים עם Notch */
+/* התאמה למגרעת (Notch) באייפונים - כדי שהתוכן לא יוסתר */
 .safe-area-view {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -28,25 +29,30 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-/* התנהגות אפליקטיבית: */
+/* --- הגדרות חווית משתמש (UX) --- */
+
+/* הגדרות כלליות לכל האלמנטים */
 * {
-  /* מבטל את ההבהוב הכחול כשלוחצים על כפתור במובייל */
+  /* מובייל: ביטול הבהוב כחול בלחיצה על כפתורים */
   -webkit-tap-highlight-color: transparent;
-  
-  /* מבטל את התפריט הקופץ בלחיצה ארוכה (Copy/Paste) אלא אם זה שדה טקסט */
-  -webkit-touch-callout: none;
-  
-  /* מונע אפשרות לסמן טקסט (כמו באפליקציה) */
-  user-select: none;
 }
 
-/* מחזיר את האפשרות לסמן ולכתוב בתוך שדות טקסט */
+/* אלמנטים שאינם טקסט להקלדה (כפתורים, תפריטים) */
+div, button, span, img {
+  /* מובייל: מונע בחירת טקסט בטעות (תחושת אפליקציה) */
+  user-select: none;
+  /* מובייל: מונע תפריט קליק ימני/לחיצה ארוכה (Copy/Paste) */
+  -webkit-touch-callout: none;
+}
+
+/* החרגה: שדות טקסט (Input/Textarea) חייבים להיות ניתנים לסימון ועריכה */
 input, textarea {
   user-select: text;
   -webkit-user-select: text;
+  -webkit-touch-callout: default;
 }
 
-/* הסתרת פס גלילה (Scrollbar) למראה נקי, אך משאיר גלילה פעילה */
+/* עיצוב גלילה נקי (Scrollbar מוסתר אבל פעיל) */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
