@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --background: #efeae2; /* צבע רקע וואטסאפ */
+  --background: #efeae2; /* צבע רקע מותאם אישית */
   --foreground: #111827;
 }
 
@@ -28,9 +28,9 @@ body {
 
 /* ביטול סימון טקסט בלחיצה ארוכה (תחושת אפליקציה) */
 * {
-  -webkit-tap-highlight-color: transparent; /* ביטול הבהוב כחול בלחיצה */
+  -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  user-select: none; /* מונע בחירת טקסט */
+  user-select: none;
 }
 
 /* אפשור בחירת טקסט רק בתיבות קלט */
