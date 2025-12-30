@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  /* צבע הרקע המקצועי (גוון קרם נעים לעין, כמו בוואטסאפ העסקי) */
-  --background: #efeae2;
+  /* צבעי המותג - קרם נעים לעין */
+  --background: #efeae2; 
   --foreground: #111827;
 }
 
@@ -13,15 +13,15 @@ body {
   background: var(--background);
   font-family: var(--font-rubik), sans-serif;
   
-  /* מניעת "קפיצות" גלילה בדפדפן (Overscroll) */
+  /* מונע "קפיצות" גלילה מעצבנות (Overscroll) */
   overscroll-behavior-y: none;
   
-  /* החלקת פונטים לקריאות מקסימלית במסכים שונים */
+  /* החלקת פונטים */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* התאמה למגרעת (Notch) באייפונים - כדי שהתוכן לא יוסתר */
+/* טיפול במגרעת (Notch) של אייפונים */
 .safe-area-view {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -29,30 +29,30 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-/* --- הגדרות חווית משתמש (UX) --- */
+/* --- הופך את האתר לאפליקציה (UX) --- */
 
-/* הגדרות כלליות לכל האלמנטים */
+/* כל האלמנטים באתר */
 * {
-  /* מובייל: ביטול הבהוב כחול בלחיצה על כפתורים */
+  /* מובייל: מבטל הבהוב כחול בלחיצה */
   -webkit-tap-highlight-color: transparent;
 }
 
-/* אלמנטים שאינם טקסט להקלדה (כפתורים, תפריטים) */
-div, button, span, img {
-  /* מובייל: מונע בחירת טקסט בטעות (תחושת אפליקציה) */
+/* טקסטים, כפתורים ותמונות */
+div, button, span, img, p, h1, h2, h3 {
+  /* מובייל: מונע בחירת טקסט (כמו באפליקציה אמיתית) */
   user-select: none;
-  /* מובייל: מונע תפריט קליק ימני/לחיצה ארוכה (Copy/Paste) */
+  /* מובייל: מונע תפריט לחיצה ארוכה (Copy/Paste) */
   -webkit-touch-callout: none;
 }
 
-/* החרגה: שדות טקסט (Input/Textarea) חייבים להיות ניתנים לסימון ועריכה */
+/* החרגה: שדות טקסט חייבים להיות ניתנים לכתיבה */
 input, textarea {
-  user-select: text;
-  -webkit-user-select: text;
-  -webkit-touch-callout: default;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -webkit-touch-callout: default !important;
 }
 
-/* עיצוב גלילה נקי (Scrollbar מוסתר אבל פעיל) */
+/* הסתרת פס גלילה (Scrollbar) למראה נקי */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
