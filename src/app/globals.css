@@ -3,18 +3,50 @@
 @tailwind utilities;
 
 :root {
-  --background: #efeae2; /* צבע רקע מקורי (קרם/וואטסאפ) */
+  --background: #efeae2; /* צבע הקרם המקצועי (דמוי וואטסאפ) */
   --foreground: #111827;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-rubik), sans-serif; /* שימוש בפונט רוביק */
-  direction: rtl; /* יישור לימין כברירת מחדל */
+  font-family: var(--font-rubik), sans-serif;
+  
+  /* מונע אפקט "קפיצה" בגלילה מעבר לגבולות (באנדרואיד/כרום) */
+  overscroll-behavior-y: none;
+  
+  /* החלקת פונטים לתצוגה חדה */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* הסתרת פס גלילה לאסתטיקה, אך משאיר גלילה פעילה */
+/* טיפול באזור הבטוח (Safe Area) למכשירים עם Notch */
+.safe-area-view {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* התנהגות אפליקטיבית: */
+* {
+  /* מבטל את ההבהוב הכחול כשלוחצים על כפתור במובייל */
+  -webkit-tap-highlight-color: transparent;
+  
+  /* מבטל את התפריט הקופץ בלחיצה ארוכה (Copy/Paste) אלא אם זה שדה טקסט */
+  -webkit-touch-callout: none;
+  
+  /* מונע אפשרות לסמן טקסט (כמו באפליקציה) */
+  user-select: none;
+}
+
+/* מחזיר את האפשרות לסמן ולכתוב בתוך שדות טקסט */
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* הסתרת פס גלילה (Scrollbar) למראה נקי, אך משאיר גלילה פעילה */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
