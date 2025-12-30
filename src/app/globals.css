@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 :root {
-  /* צבעי המותג - קרם נעים לעין */
   --background: #efeae2; 
   --foreground: #111827;
 }
@@ -12,16 +11,11 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-rubik), sans-serif;
-  
-  /* מונע "קפיצות" גלילה מעצבנות (Overscroll) */
   overscroll-behavior-y: none;
-  
-  /* החלקת פונטים */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* טיפול במגרעת (Notch) של אייפונים */
 .safe-area-view {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -29,30 +23,21 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-/* --- הופך את האתר לאפליקציה (UX) --- */
-
-/* כל האלמנטים באתר */
 * {
-  /* מובייל: מבטל הבהוב כחול בלחיצה */
   -webkit-tap-highlight-color: transparent;
 }
 
-/* טקסטים, כפתורים ותמונות */
 div, button, span, img, p, h1, h2, h3 {
-  /* מובייל: מונע בחירת טקסט (כמו באפליקציה אמיתית) */
   user-select: none;
-  /* מובייל: מונע תפריט לחיצה ארוכה (Copy/Paste) */
   -webkit-touch-callout: none;
 }
 
-/* החרגה: שדות טקסט חייבים להיות ניתנים לכתיבה */
 input, textarea {
   user-select: text !important;
   -webkit-user-select: text !important;
   -webkit-touch-callout: default !important;
 }
 
-/* הסתרת פס גלילה (Scrollbar) למראה נקי */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
