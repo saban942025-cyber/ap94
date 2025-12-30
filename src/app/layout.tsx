@@ -3,7 +3,7 @@ import { Rubik } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
-// טעינת פונט רוביק במשקלים שונים למראה מקצועי
+// הגדרת פונט רוביק למראה מקצועי וקריא בעברית
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
   variable: "--font-rubik",
@@ -16,23 +16,21 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default", // סטטוס בר שמשתלב טבעי
+    statusBarStyle: "black-translucent", // משתלב עם המסך באייפון
     title: "Saban Systems",
   },
   formatDetection: {
-    telephone: false,
+    telephone: false, // מונע ממספרים להפוך ללינקים כחולים מכוערים
   },
 };
 
-// הגדרת Viewport מקצועית:
-// במובייל: נועלת את הרוחב למכשיר (כמו אפליקציה).
-// במחשב: מאפשרת תצוגה רגילה.
+// הגדרות Viewport קריטיות למובייל - נותן תחושת Native App
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false, // קריטי לתחושת "אפליקציה" בנייד
-  themeColor: "#efeae2", // צבע הבר העליון תואם לרקע
+  userScalable: false, // מונע זום (הכי חשוב לתחושת אפליקציה)
+  themeColor: "#008069", // צבע הבר העליון (ירוק סבן)
 };
 
 export default function RootLayout({
@@ -43,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
+        {/* טעינת OneSignal להתראות */}
         <Script 
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" 
           defer 
@@ -76,7 +75,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      {/* מחלקה safe-area-view דואגת למרווחים באייפונים חדשים */}
+      {/* safe-area-view דואג שהתוכן לא יוסתר ע"י המגרעת באייפון */}
       <body className={`${rubik.className} antialiased safe-area-view`}>
         {children}
       </body>
