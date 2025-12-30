@@ -30,18 +30,18 @@ export default function RootLayout({
           strategy="afterInteractive" 
         />
         
-        {/* אתחול OneSignal עם ה-ID החדש שלך */}
+        {/* אתחול OneSignal עם ה-ID המעודכן שלך */}
         <Script id="onesignal-init" strategy="afterInteractive">
           {`
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function(OneSignal) {
               await OneSignal.init({
-                appId: "07b81f2e-e812-424f-beca-36584b12ccf2", // ה-ID המעודכן שלך
+                appId: "07b81f2e-e812-424f-beca-36584b12ccf2", // ✅ ה-ID המעודכן
                 safari_web_id: "web.onesignal.auto.bf4567-your-safari-id", // אופציונלי
                 notifyButton: {
-                  enable: true, /* זה מה שמציג את הפעמון האדום! */
-                  colors: { // הגדרות עיצוב לפעמון
-                    'circle.background': 'rgb(220, 38, 38)', // אדום
+                  enable: true, /* מציג את הפעמון האדום להרשמה */
+                  colors: {
+                    'circle.background': 'rgb(220, 38, 38)',
                     'circle.foreground': 'white',
                     'badge.background': 'rgb(220, 38, 38)',
                     'badge.foreground': 'white',
@@ -52,21 +52,8 @@ export default function RootLayout({
                     'dialog.button.background': 'rgb(220, 38, 38)',
                     'dialog.button.foreground': 'white'
                   },
-                  text: {
-                    'tip.state.unsubscribed': 'הירשם לקבלת התראות על הזמנות',
-                    'tip.state.subscribed': 'אתה רשום להתראות',
-                    'tip.state.blocked': 'התראות חסומות',
-                    'message.action.subscribed': 'תודה שנרשמת!',
-                    'message.action.resubscribed': 'אתה רשום מחדש להודעות',
-                    'message.action.unsubscribed': 'לא תקבל יותר התראות',
-                    'dialog.main.title': 'ניהול התראות',
-                    'dialog.main.button.subscribe': 'הירשם',
-                    'dialog.main.button.unsubscribe': 'בטל הרשמה',
-                    'dialog.blocked.title': 'בטל חסימת התראות',
-                    'dialog.blocked.message': 'אנא עקוב אחר ההוראות כדי לאפשר התראות.'
-                  }
                 },
-                allowLocalhostAsSecureOrigin: true, // מאפשר עבודה גם בבדיקות מקומיות
+                allowLocalhostAsSecureOrigin: true,
               });
             });
           `}
