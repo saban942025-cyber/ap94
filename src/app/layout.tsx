@@ -3,6 +3,7 @@ import { Rubik } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 
+// טעינת פונט רוביק במשקלים שונים למראה מקצועי
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
   variable: "--font-rubik",
@@ -15,21 +16,23 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent", // סרגל סטטוס שקוף/משתלב
+    statusBarStyle: "default", // סטטוס בר שמשתלב טבעי
     title: "Saban Systems",
   },
   formatDetection: {
-    telephone: false, // מניעת הפיכת מספרים ללינקים כחולים אוטומטית
+    telephone: false,
   },
 };
 
-// הגדרות תצוגה למובייל - חוסם זום והופך לאפליקציה מלאה
+// הגדרת Viewport מקצועית:
+// במובייל: נועלת את הרוחב למכשיר (כמו אפליקציה).
+// במחשב: מאפשרת תצוגה רגילה.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false, // זה הקסם שנותן תחושת אפליקציה (מונע זום)
-  themeColor: "#008069", // צבע הבר העליון באנדרואיד
+  userScalable: false, // קריטי לתחושת "אפליקציה" בנייד
+  themeColor: "#efeae2", // צבע הבר העליון תואם לרקע
 };
 
 export default function RootLayout({
@@ -73,7 +76,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      {/* הוספת safe-area-view לטיפול במגרעות של אייפון */}
+      {/* מחלקה safe-area-view דואגת למרווחים באייפונים חדשים */}
       <body className={`${rubik.className} antialiased safe-area-view`}>
         {children}
       </body>
