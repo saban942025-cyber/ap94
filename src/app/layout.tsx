@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
-import Script from "next/script"; // 1. ייבוא הרכיב לסקריפטים
+import Script from "next/script";
 
-const rubik = Rubik({ subsets: ["hebrew", "latin"] });
+// הגדרת פונט רוביק לתמיכה מלאה בעברית
+const rubik = Rubik({
+  subsets: ["hebrew", "latin"],
+  variable: "--font-rubik",
+});
 
 export const metadata: Metadata = {
   title: "Saban Systems",
@@ -19,31 +23,58 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
-        {/* 2. הטמעת הסקריפט החיצוני של OneSignal */}
+        {/* טעינת הסקריפט הראשי של OneSignal */}
         <Script 
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" 
           defer 
           strategy="afterInteractive" 
         />
         
-        {/* 3. הטמעת קוד האתחול של OneSignal עם ה-App ID שלך */}
+        {/* אתחול OneSignal עם ה-ID החדש שלך */}
         <Script id="onesignal-init" strategy="afterInteractive">
           {`
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function(OneSignal) {
               await OneSignal.init({
-                appId: "07b81f2e-e812-424f-beca-36584b12ccf2",
+                appId: "07b81f2e-e812-424f-beca-36584b12ccf2", // ה-ID המעודכן שלך
                 safari_web_id: "web.onesignal.auto.bf4567-your-safari-id", // אופציונלי
                 notifyButton: {
-                  enable: true, /* מציג כפתור פעמון קטן להרשמה */
+                  enable: true, /* זה מה שמציג את הפעמון האדום! */
+                  colors: { // הגדרות עיצוב לפעמון
+                    'circle.background': 'rgb(220, 38, 38)', // אדום
+                    'circle.foreground': 'white',
+                    'badge.background': 'rgb(220, 38, 38)',
+                    'badge.foreground': 'white',
+                    'badge.bordercolor': 'white',
+                    'pulse.color': 'white',
+                    'dialog.button.background.hovering': 'rgb(200, 30, 30)',
+                    'dialog.button.background.active': 'rgb(200, 30, 30)',
+                    'dialog.button.background': 'rgb(220, 38, 38)',
+                    'dialog.button.foreground': 'white'
+                  },
+                  text: {
+                    'tip.state.unsubscribed': 'הירשם לקבלת התראות על הזמנות',
+                    'tip.state.subscribed': 'אתה רשום להתראות',
+                    'tip.state.blocked': 'התראות חסומות',
+                    'message.action.subscribed': 'תודה שנרשמת!',
+                    'message.action.resubscribed': 'אתה רשום מחדש להודעות',
+                    'message.action.unsubscribed': 'לא תקבל יותר התראות',
+                    'dialog.main.title': 'ניהול התראות',
+                    'dialog.main.button.subscribe': 'הירשם',
+                    'dialog.main.button.unsubscribe': 'בטל הרשמה',
+                    'dialog.blocked.title': 'בטל חסימת התראות',
+                    'dialog.blocked.message': 'אנא עקוב אחר ההוראות כדי לאפשר התראות.'
+                  }
                 },
-                allowLocalhostAsSecureOrigin: true, /* מאפשר בדיקות במחשב שלך */
+                allowLocalhostAsSecureOrigin: true, // מאפשר עבודה גם בבדיקות מקומיות
               });
             });
           `}
         </Script>
       </head>
-      <body className={rubik.className}>{children}</body>
+      <body className={`${rubik.className} antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }
