@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next"; // הוספנו Viewport
+import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
@@ -24,8 +24,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false, // מונע זום-אין ידני
-  themeColor: "#008069", // צבע הסטטוס בר בטלפון
+  userScalable: false,
+  themeColor: "#008069",
 };
 
 export default function RootLayout({
