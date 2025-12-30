@@ -36,7 +36,7 @@ export default function RootLayout({
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function(OneSignal) {
               await OneSignal.init({
-                appId: "f195bc0a-4f32-4a8f-8796-927415b462c0", // ה-ID המעודכן שלך
+                appId: "07b81f2e-e812-424f-beca-36584b12ccf2", // ה-ID המעודכן שלך
                 safari_web_id: "web.onesignal.auto.bf4567-your-safari-id", // אופציונלי
                 notifyButton: {
                   enable: true, /* זה מה שמציג את הפעמון האדום! */
