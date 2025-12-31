@@ -1,28 +1,22 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+@theme {
+  --color-background: #efeae2;
+  --color-foreground: #111827;
+  --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* הגדרות CSS רגילות */
 :root {
-  --background: #efeae2; /* רקע קרם/וואטסאפ */
+  --background: #efeae2;
   --foreground: #111827;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-rubik), sans-serif;
-}
-
-/* הגדרת גובה מלא לדף כדי למנוע פסים לבנים */
 html, body {
   height: 100%;
   background-color: var(--background);
-}
-
-body {
   color: var(--foreground);
   font-family: var(--font-rubik), sans-serif;
-  /* מניעת קפיצות גלילה במובייל */
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
 }
@@ -40,7 +34,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* עיצוב פס גלילה עדין */
+/* עיצוב פס גלילה */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
