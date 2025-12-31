@@ -2,14 +2,11 @@
 
 @theme {
   --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
-  
-  /* מגדירים את הצבעים כאן כדי ש-Tailwind יכיר אותם */
   --color-background: #efeae2;
   --color-foreground: #111827;
-  --color-primary: #008069; /* הירוק של המותג */
+  --color-primary: #008069;
 }
 
-/* הגדרות CSS רגילות לדפדפן */
 :root {
   --background: #efeae2;
   --foreground: #111827;
@@ -24,7 +21,6 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* התאמה לאייפון */
 .safe-area-view {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -34,13 +30,4 @@ html, body {
 
 * {
   -webkit-tap-highlight-color: transparent;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-thumb {
-  background: #c4b5a3;
-  border-radius: 3px;
 }
