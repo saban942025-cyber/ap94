@@ -3,8 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --background: #efeae2; /* צבע הרקע הראשי */
+  --background: #efeae2; /* רקע קרם/וואטסאפ */
   --foreground: #111827;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-rubik), sans-serif;
 }
 
 /* הגדרת גובה מלא לדף כדי למנוע פסים לבנים */
