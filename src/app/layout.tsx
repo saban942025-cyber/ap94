@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
-import "./globals.css"; // חשוב מאוד - טעינת העיצוב
+import "./globals.css";
 import Script from "next/script";
 
 const rubik = Rubik({
@@ -10,8 +10,8 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: "Saban Systems V3", // שיניתי את השם כדי שתראה שזה התעדכן!
-  description: "מערכת ניהול הזמנות",
+  title: "Saban Systems",
+  description: "מערכת ניהול הזמנות חכמה",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -20,12 +20,13 @@ export const metadata: Metadata = {
   },
 };
 
+// שומר על תחושת אפליקציה במובייל (מונע זום)
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#008069",
+  themeColor: "#efeae2", // צבע הרקע
 };
 
 export default function RootLayout({
@@ -34,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl">
+    <html lang="he" dir="rtl" className="h-full bg-[#efeae2]">
       <head>
         <Script 
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" 
@@ -54,12 +55,12 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      {/* כאן אנחנו משתמשים בפונט רוביק */}
-      <body className={rubik.className}>
-        {/* זו הקופסה שתחזיר את מראה האפליקציה */}
-        <div className="mobile-container">
-          {children}
-        </div>
+      
+      {/* גוף האתר: במובייל הוא 100%, במחשב הוא מוגבל לרוחב מקצועי וממורכז */}
+      <body className={`${rubik.className} antialiased h-full safe-area-view`}>
+        <main className="min-h-screen w-full mx-auto max-w-7xl sm:px-6 lg:px-8 bg-[#efeae2]">
+           {children}
+        </main>
       </body>
     </html>
   );
