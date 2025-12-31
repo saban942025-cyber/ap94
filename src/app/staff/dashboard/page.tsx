@@ -139,13 +139,6 @@ export default function StaffDashboard() {
         <div className="p-3 bg-gray-100 border-b flex justify-between items-center text-gray-600"><span className="font-bold text-sm flex gap-2"><Users size={16}/> לקוחות</span><button onClick={() => setShowAddClientModal(true)} className="hover:bg-gray-200 p-1 rounded"><Plus size={18}/></button></div>
         <div className="flex-1 overflow-y-auto">{clients.map(client => (<div key={client.id} onClick={() => setSelectedClientId(client.id)} className={`p-4 border-b cursor-pointer hover:bg-green-50 transition-all group ${selectedClientId === client.id ? 'bg-green-100 border-r-4 border-r-green-600' : ''}`}><div className="flex justify-between items-center w-full"><div className="flex items-center gap-3">{client.avatarUrl ? <img src={client.avatarUrl} className="w-8 h-8 rounded-full object-cover"/> : <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center font-bold text-xs">{client.name[0]}</div>}<div><div className="font-bold text-sm">{client.name}</div><div className="text-xs text-gray-500">{client.projectName}</div></div></div><button onClick={(e) => { e.stopPropagation(); copyLink(client.id); }} className="text-gray-400 hover:text-blue-600 bg-white p-2 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all border border-gray-100 hover:border-blue-200" title="העתק לינק קסם ללקוח"><Link size={14}/></button></div></div>))}</div>
       </div>
-export default function Page() {
-  return (
-    <div className="bg-red-500 text-white p-10 text-3xl">
-      TAILWIND TEST
-    </div>
-  );
-}
 
       {/* מרכז */}
       <div className="flex-1 flex flex-col bg-[#efeae2] relative">
@@ -294,4 +287,5 @@ export default function Page() {
     </div>
   );
 }
+
 
