@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
-import "./globals.css";
+import "./globals.css"; // חשוב מאוד - טעינת העיצוב
 import Script from "next/script";
 
 const rubik = Rubik({
@@ -10,8 +10,8 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: "Saban Systems",
-  description: "מערכת ניהול הזמנות חכמה",
+  title: "Saban Systems V3", // שיניתי את השם כדי שתראה שזה התעדכן!
+  description: "מערכת ניהול הזמנות",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -54,9 +54,10 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className={`${rubik.className} antialiased bg-[#e5ddd5]`}>
-        {/* זו המעטפת שתכריח את האתר להיראות כמו אפליקציה גם במחשב */}
-        <div className="max-w-md mx-auto min-h-screen bg-[#efeae2] shadow-2xl overflow-x-hidden relative">
+      {/* כאן אנחנו משתמשים בפונט רוביק */}
+      <body className={rubik.className}>
+        {/* זו הקופסה שתחזיר את מראה האפליקציה */}
+        <div className="mobile-container">
           {children}
         </div>
       </body>
