@@ -30,15 +30,3 @@ html, body {
 * {
   -webkit-tap-highlight-color: transparent;
 }
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: #c4b5a3;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
