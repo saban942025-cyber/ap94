@@ -1,14 +1,13 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
   --color-background: #efeae2;
   --color-foreground: #111827;
-  --font-sans: var(--font-rubik), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* הגדרות CSS רגילות */
 :root {
-  --background: #efeae2;
+  --background: #efeae2; /* רקע קרם */
   --foreground: #111827;
 }
 
@@ -21,7 +20,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* טיפול במגרעת (Notch) */
+/* טיפול במגרעת (Notch) לאייפון */
 .safe-area-view {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
