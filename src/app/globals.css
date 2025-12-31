@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* אנחנו מגדירים את הצבעים ישירות על ה-HTML כדי לעקוף תקלות */
 :root {
