@@ -3,47 +3,20 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation"; 
 import { db } from "../../../lib/firebase"; 
 import { collection, addDoc, query, orderBy, onSnapshot, updateDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
-import { Send, User, Package, CheckCircle, Trash2, List, MessageSquare, Truck, Check, LogOut, MapPin, FileText, Plus, Copy, Phone, Briefcase, Hash, Image as ImageIcon, FileSignature, Loader2, X, Clock, Box, ArrowLeftRight, UserCheck, Star, Users, UserCog, Mail, Eye, EyeOff, Lock, Link, Bell, BellOff, Search, Edit, Minus, Tag, AlertTriangle, HelpCircle, Split, ChevronUp } from "lucide-react"; 
+import { Send, User, Package, CheckCircle, Trash2, List, MessageSquare, Truck, Check, LogOut, MapPin, FileText, Plus, Copy, Phone, Briefcase, Hash, Image as ImageIcon, FileSignature, Loader2, X, Clock, Box, ArrowLeftRight, UserCheck, Star, Users, UserCog, Mail, Eye, EyeOff, Lock, Link, Bell, BellOff, Search, Edit, Minus, Tag, AlertTriangle, HelpCircle } from "lucide-react"; 
 import SignatureCanvas from 'react-signature-canvas';
 import { PDFDocument, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit'; 
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwa7Xr1FtH7u_WV0cPSk2ap7JC9KcPjbQNt6XV3ojzZDaPhJ-zCVYmLJvdRWW5nbdpG/exec";
 
-// --- הגדרות ---
 const STATUS_COLORS: any = { "new": "bg-blue-100 text-blue-800 border-blue-200", "processing": "bg-orange-100 text-orange-800 border-orange-200", "shipped": "bg-purple-100 text-purple-800 border-purple-200", "delivered": "bg-green-100 text-green-800 border-green-200" };
 const STATUS_LABELS: any = { "new": "התקבל", "processing": "בהכנה", "shipped": "בדרך", "delivered": "נמסר" };
 
-const INITIAL_PRODUCTS = [
-  { key: "חול", name: "חול (בלה)", sku: "80010" },
-  { key: "סומסום", name: "סומסום (בלה)", sku: "80020" },
-  { key: "מלט", name: "מלט (שק)", sku: "10055" },
-];
-
-// --- ממשקים ---
-interface Product {
-    id: string; 
-    sku: string;
-    name: string; 
-    category: string;
-    imageUrl?: string;
-    stock: number;
-}
-
+interface Product { id: string; sku: string; name: string; category: string; imageUrl?: string; stock: number; }
 interface OrderItem { name: string; quantity: number; sku: string; productId?: string; }
-
-interface AmbiguousItem {
-    originalText: string;
-    quantity: number;
-    options: Product[];
-}
-
-interface Message { 
-    id: string; text: string; sender: "client" | "server"; timestamp: any; 
-    type: "text" | "image" | "file" | "location"; fileUrl?: string; location?: {lat: number, lng: number};
-    staffName?: string; staffRole?: string; staffAvatar?: string;
-    isInternal?: boolean;
-}
+interface AmbiguousItem { originalText: string; quantity: number; options: Product[]; }
+interface Message { id: string; text: string; sender: "client" | "server"; timestamp: any; type: "text" | "image" | "file" | "location"; fileUrl?: string; location?: {lat: number, lng: number}; staffName?: string; staffRole?: string; staffAvatar?: string; isInternal?: boolean; }
 interface Client { id: string; name: string; clientNumber: string; projectName?: string; phone: string; avatarUrl?: string; }
 interface SavedOrder { id: string; clientId: string; clientName: string; items: OrderItem[]; status: string; timestamp: any; signedPdfUrl?: string; }
 interface StaffMember { id: string; name: string; role: string; phone: string; email: string; avatarUrl: string; }
@@ -51,367 +24,85 @@ interface StaffMember { id: string; name: string; role: string; phone: string; e
 export default function StaffDashboard() {
   const router = useRouter(); 
   const [activeTab, setActiveTab] = useState<"chat" | "orders" | "team" | "inventory">("chat");
-  
-  // נתונים
   const [clients, setClients] = useState<Client[]>([]);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [inventory, setInventory] = useState<Product[]>([]);
   const [currentUser, setCurrentUser] = useState<StaffMember | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  
-  // מצבי ממשק
   const [isInternalMode, setIsInternalMode] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true); 
-  const isFirstLoad = useRef(true);
   const prevMessagesLength = useRef(0);
-
-  // מודלים
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
   const [showSmartListModal, setShowSmartListModal] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedStoryOrder, setSelectedStoryOrder] = useState<SavedOrder | null>(null);
-
-  // טפסים
   const [newClientName, setNewClientName] = useState("");
   const [newClientNumber, setNewClientNumber] = useState("");
   const [newProjectName, setNewProjectName] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
   const [newClientAvatar, setNewClientAvatar] = useState("");
-
   const [newStaffName, setNewStaffName] = useState("");
   const [newStaffRole, setNewStaffRole] = useState("");
   const [newStaffPhone, setNewStaffPhone] = useState("");
   const [newStaffEmail, setNewStaffEmail] = useState("");
   const [newStaffAvatar, setNewStaffAvatar] = useState("");
-
   const [newProdName, setNewProdName] = useState("");
   const [newProdSku, setNewProdSku] = useState("");
   const [newProdCategory, setNewProdCategory] = useState("");
   const [newProdStock, setNewProdStock] = useState("");
   const [newProdImage, setNewProdImage] = useState("");
-
   const [smartListSearch, setSmartListSearch] = useState("");
-
   const [messages, setMessages] = useState<Message[]>([]);
   const [ordersList, setOrdersList] = useState<SavedOrder[]>([]);
-  
-  // 🔥 ניהול צ'אט והשלמה אוטומטית 🔥
   const [reply, setReply] = useState("");
-  const [chatSuggestions, setChatSuggestions] = useState<Product[]>([]); // הצעות להשלמה בצ'אט
-  
+  const [chatSuggestions, setChatSuggestions] = useState<Product[]>([]); 
   const [detectedOrder, setDetectedOrder] = useState<OrderItem[]>([]); 
   const [ambiguousItems, setAmbiguousItems] = useState<AmbiguousItem[]>([]);
-
-  const [previewPdf, setPreviewPdf] = useState<string | null>(null);
-  
-  // חתימה ו-PDF
   const [showSignModal, setShowSignModal] = useState(false);
   const [pdfToSign, setPdfToSign] = useState<File | null>(null);
   const [isSigning, setIsSigning] = useState(false);
   const sigCanvas = useRef<any>({});
   const [currentOrderIdForSign, setCurrentOrderIdForSign] = useState<string | null>(null);
-  const [logistics, setLogistics] = useState({
-      unloadingStart: "", unloadingEnd: "", waitingStart: "", waitingEnd: "", craneStart: "", craneEnd: "",
-      craneType: "none", retBigBag: "", retBarrel: "", retPallet: "", retBlockPallet: "", retOther: "",
-      credBigBag: "", credBarrel: "", credPallet: "", credBlockPallet: "", credOther: "", repName: ""
-  });
-
+  const [logistics, setLogistics] = useState({ unloadingStart: "", unloadingEnd: "", waitingStart: "", waitingEnd: "", craneStart: "", craneEnd: "", craneType: "none", retBigBag: "", retBarrel: "", retPallet: "", retBlockPallet: "", retOther: "", credBigBag: "", credBarrel: "", credPallet: "", credBlockPallet: "", credOther: "", repName: "" });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // --- Hooks ---
-  useEffect(() => { 
-      const isAuth = localStorage.getItem("saban_staff_auth"); 
-      if (isAuth !== "true") { router.push("/staff/login"); } 
-      else {
-          const storedStaff = localStorage.getItem("saban_staff_data");
-          if (storedStaff) setCurrentUser(JSON.parse(storedStaff));
-      }
-      if (Notification.permission !== "granted") Notification.requestPermission();
-  }, []);
+  useEffect(() => { const isAuth = localStorage.getItem("saban_staff_auth"); if (isAuth !== "true") { router.push("/staff/login"); } else { const storedStaff = localStorage.getItem("saban_staff_data"); if (storedStaff) setCurrentUser(JSON.parse(storedStaff)); } if (Notification.permission !== "granted") Notification.requestPermission(); }, []);
+  const handleLogout = () => { localStorage.removeItem("saban_staff_auth"); localStorage.removeItem("saban_staff_id"); localStorage.removeItem("saban_staff_data"); router.push("/staff/login"); };
 
-  const handleLogout = () => { 
-      localStorage.removeItem("saban_staff_auth"); 
-      localStorage.removeItem("saban_staff_id"); 
-      localStorage.removeItem("saban_staff_data");
-      router.push("/staff/login"); 
-  };
-
-  // --- Firebase Listeners ---
   useEffect(() => { const q = query(collection(db, "clients"), orderBy("clientNumber")); const unsubscribe = onSnapshot(q, (snapshot) => { setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Client[]); }); return () => unsubscribe(); }, []);
   useEffect(() => { const qOrders = query(collection(db, "orders"), orderBy("timestamp", "desc")); const unsubOrders = onSnapshot(qOrders, (snapshot) => { setOrdersList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as SavedOrder[]); }); return () => unsubOrders(); }, []);
   useEffect(() => { const q = query(collection(db, "staff")); const unsubscribe = onSnapshot(q, (snapshot) => { setStaffMembers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as StaffMember[]); }); return () => unsubscribe(); }, []);
   useEffect(() => { const q = query(collection(db, "inventory"), orderBy("name")); const unsubscribe = onSnapshot(q, (snapshot) => { setInventory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[]); }); return () => unsubscribe(); }, []);
 
-  // --- Chat Logic ---
-  useEffect(() => {
-    if (!selectedClientId) return;
-    setDetectedOrder([]);
-    setAmbiguousItems([]); 
-    prevMessagesLength.current = 0; 
+  useEffect(() => { if (!selectedClientId) return; setDetectedOrder([]); setAmbiguousItems([]); prevMessagesLength.current = 0; const q = query(collection(db, `chats/${selectedClientId}/messages`), orderBy("timestamp", "asc")); const unsubscribe = onSnapshot(q, (snapshot) => { const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Message[]; if (prevMessagesLength.current === 0 && msgs.length > 0) { prevMessagesLength.current = msgs.length; setMessages(msgs); setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100); return; } if (msgs.length > prevMessagesLength.current) { const newMessages = msgs.slice(prevMessagesLength.current); const clientMsg = newMessages.find(m => m.sender === 'client'); if (clientMsg) { playNotificationSound(); if (clientMsg.type === 'text') { analyzeOrder(clientMsg.text); } } } setMessages(msgs); prevMessagesLength.current = msgs.length; setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100); }); return () => unsubscribe(); }, [selectedClientId, inventory]);
 
-    const q = query(collection(db, `chats/${selectedClientId}/messages`), orderBy("timestamp", "asc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Message[];
-      
-      if (prevMessagesLength.current === 0 && msgs.length > 0) {
-          prevMessagesLength.current = msgs.length;
-          setMessages(msgs);
-          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-          return;
-      }
+  const playNotificationSound = () => { const audio = new Audio('/notification.mp3'); audio.onerror = () => setSoundEnabled(false); audio.play().then(() => setSoundEnabled(true)).catch(() => setSoundEnabled(false)); if (Notification.permission === "granted") new Notification("הודעה חדשה מסבן", { body: "לקוח שלח הודעה בצ'אט!", icon: "/logo.png" }); };
+  const enableSound = () => { const audio = new Audio('/notification.mp3'); audio.play().then(() => setSoundEnabled(true)).catch(() => alert("שגיאה בהפעלת סאונד")); };
 
-      if (msgs.length > prevMessagesLength.current) {
-          const newMessages = msgs.slice(prevMessagesLength.current);
-          const clientMsg = newMessages.find(m => m.sender === 'client');
-          
-          if (clientMsg) {
-              playNotificationSound();
-              if (clientMsg.type === 'text') {
-                  analyzeOrder(clientMsg.text);
-              }
-          }
-      }
+  const handleChatInputChange = (text: string) => { setReply(text); if (text.length < 2) { setChatSuggestions([]); return; } const matches = inventory.filter(p => p.name.toLowerCase().includes(text.toLowerCase()) || p.sku.includes(text)).slice(0, 5); setChatSuggestions(matches); };
+  const selectChatSuggestion = (product: Product) => { setReply(`10 ${product.name}`); setChatSuggestions([]); };
 
-      setMessages(msgs);
-      prevMessagesLength.current = msgs.length; 
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    });
-    
-    return () => unsubscribe();
-  }, [selectedClientId, inventory]);
+  const analyzeOrder = (text: string) => { const items: OrderItem[] = []; const ambiguities: AmbiguousItem[] = []; let remainingText = text.toLowerCase(); const sortedInventory = [...inventory].sort((a, b) => b.name.length - a.name.length); sortedInventory.forEach(prod => { const requiredWords = prod.name.toLowerCase().split(' ').filter(w => w.length > 1); const allWordsPresent = requiredWords.every(word => remainingText.includes(word)); if (allWordsPresent) { const regexQuantity = /(\d+)/; const match = remainingText.match(regexQuantity); if (match) { items.push({ name: prod.name, quantity: parseInt(match[0]), sku: prod.sku, productId: prod.id }); requiredWords.forEach(word => { remainingText = remainingText.replace(word, ' '.repeat(word.length)); }); remainingText = remainingText.replace(match[0], ' '.repeat(match[0].length)); } } }); const potentialMatches = inventory.filter(prod => { const words = prod.name.toLowerCase().split(' ').filter(w => w.length > 2); return words.some(word => remainingText.includes(word)); }); if (potentialMatches.length > 0) { const quantityMatch = remainingText.match(/(\d+)/); const quantity = quantityMatch ? parseInt(quantityMatch[0]) : 1; ambiguities.push({ originalText: "מוצר לא זוהה בוודאות", quantity: quantity, options: potentialMatches }); } if (items.length > 0) setDetectedOrder(prev => [...prev, ...items]); if (ambiguities.length > 0) setAmbiguousItems(prev => [...prev, ...ambiguities]); };
+  const resolveAmbiguity = (ambiguousIdx: number, selectedProduct: Product) => { const ambItem = ambiguousItems[ambiguousIdx]; const newItem: OrderItem = { name: selectedProduct.name, quantity: ambItem.quantity, sku: selectedProduct.sku, productId: selectedProduct.id }; setDetectedOrder(prev => [...prev, newItem]); setAmbiguousItems(prev => prev.filter((_, i) => i !== ambiguousIdx)); };
+  const removeAmbiguity = (index: number) => { setAmbiguousItems(prev => prev.filter((_, i) => i !== index)); };
 
-  const playNotificationSound = () => {
-      const audio = new Audio('/notification.mp3');
-      audio.onerror = () => setSoundEnabled(false);
-      audio.play().then(() => setSoundEnabled(true)).catch(() => setSoundEnabled(false));
-      if (Notification.permission === "granted") new Notification("הודעה חדשה מסבן", { body: "לקוח שלח הודעה בצ'אט!", icon: "/logo.png" });
-  };
-
-  const enableSound = () => {
-      const audio = new Audio('/notification.mp3');
-      audio.play().then(() => setSoundEnabled(true)).catch(() => alert("שגיאה בהפעלת סאונד"));
-  };
-
-  // --- 🔥 לוגיקת השלמה אוטומטית בצ'אט (Autocomplete) 🔥 ---
-  const handleChatInputChange = (text: string) => {
-      setReply(text);
-      
-      // אם הטקסט קצר מדי או ריק - נקה הצעות
-      if (text.length < 2) {
-          setChatSuggestions([]);
-          return;
-      }
-
-      // חפש מוצרים שמתחילים בטקסט או מכילים אותו
-      const matches = inventory.filter(p => 
-          p.name.toLowerCase().includes(text.toLowerCase()) || 
-          p.sku.includes(text)
-      ).slice(0, 5); // הצג מקסימום 5 הצעות
-
-      setChatSuggestions(matches);
-  };
-
-  const selectChatSuggestion = (product: Product) => {
-      // הכנסת המוצר לתיבה עם כמות ברירת מחדל של 10 (כדי שהזיהוי יעבוד)
-      setReply(`10 ${product.name}`);
-      setChatSuggestions([]);
-      // כאן המשתמש יכול לשנות את המספר וללחוץ Enter
-  };
-
-  // --- AI Analysis ---
-  const analyzeOrder = (text: string) => { 
-      const items: OrderItem[] = [];
-      const ambiguities: AmbiguousItem[] = []; 
-      let remainingText = text.toLowerCase();
-
-      const sortedInventory = [...inventory].sort((a, b) => b.name.length - a.name.length);
-
-      sortedInventory.forEach(prod => {
-          const requiredWords = prod.name.toLowerCase().split(' ').filter(w => w.length > 1);
-          const allWordsPresent = requiredWords.every(word => remainingText.includes(word));
-
-          if (allWordsPresent) {
-              const regexQuantity = /(\d+)/;
-              const match = remainingText.match(regexQuantity);
-
-              if (match) {
-                  items.push({ 
-                      name: prod.name, 
-                      quantity: parseInt(match[0]), 
-                      sku: prod.sku,
-                      productId: prod.id 
-                  });
-                  requiredWords.forEach(word => { remainingText = remainingText.replace(word, ' '.repeat(word.length)); });
-                  remainingText = remainingText.replace(match[0], ' '.repeat(match[0].length));
-              }
-          }
-      });
-
-      const potentialMatches = inventory.filter(prod => {
-          const words = prod.name.toLowerCase().split(' ').filter(w => w.length > 2); 
-          return words.some(word => remainingText.includes(word));
-      });
-
-      if (potentialMatches.length > 0) {
-          const quantityMatch = remainingText.match(/(\d+)/);
-          const quantity = quantityMatch ? parseInt(quantityMatch[0]) : 1; 
-          ambiguities.push({ originalText: "מוצר לא זוהה בוודאות", quantity: quantity, options: potentialMatches });
-      }
-
-      if (items.length > 0) setDetectedOrder(prev => [...prev, ...items]);
-      if (ambiguities.length > 0) setAmbiguousItems(prev => [...prev, ...ambiguities]);
-  };
-
-  const resolveAmbiguity = (ambiguousIdx: number, selectedProduct: Product) => {
-      const ambItem = ambiguousItems[ambiguousIdx];
-      const newItem: OrderItem = { name: selectedProduct.name, quantity: ambItem.quantity, sku: selectedProduct.sku, productId: selectedProduct.id };
-      setDetectedOrder(prev => [...prev, newItem]);
-      setAmbiguousItems(prev => prev.filter((_, i) => i !== ambiguousIdx));
-  };
-
-  const removeAmbiguity = (index: number) => {
-      setAmbiguousItems(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // --- פונקציות ניהול ---
-  const handleAddProduct = async () => {
-      if (!newProdName || !newProdSku) { alert("חובה למלא שם ומק״ט"); return; }
-      await addDoc(collection(db, "inventory"), {
-          name: newProdName, sku: newProdSku, category: newProdCategory || "כללי", stock: parseInt(newProdStock) || 0, imageUrl: newProdImage || "",
-      });
-      setShowAddProductModal(false); setNewProdName(""); setNewProdSku(""); setNewProdCategory(""); setNewProdStock(""); setNewProdImage("");
-      alert("מוצר נוסף בהצלחה!");
-  };
-
-  const addItemFromSmartList = (product: Product, quantity: number) => {
-      if (quantity <= 0) return;
-      const existingItemIndex = detectedOrder.findIndex(item => item.sku === product.sku);
-      const updatedOrder = [...detectedOrder];
-      if (existingItemIndex > -1) { updatedOrder[existingItemIndex].quantity += quantity; } 
-      else { updatedOrder.push({ name: product.name, sku: product.sku, quantity: quantity, productId: product.id }); }
-      setDetectedOrder(updatedOrder);
-  };
-
-  const handleSendReply = async () => { 
-      if (!reply.trim() || !selectedClientId) return; 
-      const messageData: any = { text: reply, sender: "server", timestamp: new Date(), type: "text", isInternal: isInternalMode };
-      if (currentUser) { messageData.staffName = currentUser.name; messageData.staffRole = currentUser.role; messageData.staffAvatar = currentUser.avatarUrl; }
-      await addDoc(collection(db, `chats/${selectedClientId}/messages`), messageData); 
-      setReply(""); 
-      setChatSuggestions([]); // ניקוי הצעות לאחר שליחה
-  };
-
+  const handleAddProduct = async () => { if (!newProdName || !newProdSku) { alert("חובה למלא שם ומק״ט"); return; } await addDoc(collection(db, "inventory"), { name: newProdName, sku: newProdSku, category: newProdCategory || "כללי", stock: parseInt(newProdStock) || 0, imageUrl: newProdImage || "", }); setShowAddProductModal(false); setNewProdName(""); setNewProdSku(""); setNewProdCategory(""); setNewProdStock(""); setNewProdImage(""); alert("מוצר נוסף בהצלחה!"); };
+  const addItemFromSmartList = (product: Product, quantity: number) => { if (quantity <= 0) return; const existingItemIndex = detectedOrder.findIndex(item => item.sku === product.sku); const updatedOrder = [...detectedOrder]; if (existingItemIndex > -1) { updatedOrder[existingItemIndex].quantity += quantity; } else { updatedOrder.push({ name: product.name, sku: product.sku, quantity: quantity, productId: product.id }); } setDetectedOrder(updatedOrder); };
+  const handleSendReply = async () => { if (!reply.trim() || !selectedClientId) return; const messageData: any = { text: reply, sender: "server", timestamp: new Date(), type: "text", isInternal: isInternalMode }; if (currentUser) { messageData.staffName = currentUser.name; messageData.staffRole = currentUser.role; messageData.staffAvatar = currentUser.avatarUrl; } await addDoc(collection(db, `chats/${selectedClientId}/messages`), messageData); setReply(""); setChatSuggestions([]); };
   const handleAddClient = async () => { if (!newClientName.trim()) return; const newId = newClientNumber.trim() + "_" + Math.floor(Math.random() * 1000); await setDoc(doc(db, "clients", newId), { name: newClientName, clientNumber: newClientNumber, projectName: newProjectName || "", phone: newClientPhone || "", avatarUrl: newClientAvatar || "", createdAt: new Date() }); setShowAddClientModal(false); setSelectedClientId(newId); };
-  
-  const handleAddStaff = async () => {
-      if (!newStaffName.trim() || !newStaffEmail.trim()) { alert("חובה למלא שם ואימייל"); return; }
-      const newId = "staff_" + Math.floor(100000 + Math.random() * 900000);
-      try {
-          await setDoc(doc(db, "staff", newId), {
-              name: newStaffName, role: newStaffRole, phone: newStaffPhone, email: newStaffEmail.toLowerCase(),
-              password: "123456", isFirstLogin: true, avatarUrl: newStaffAvatar, createdAt: new Date()
-          });
-          setShowAddStaffModal(false);
-          setNewStaffName(""); setNewStaffRole(""); setNewStaffPhone(""); setNewStaffEmail(""); setNewStaffAvatar("");
-          alert(`עובד נוצר בהצלחה!\nמשתמש: ${newStaffEmail}\nסיסמה: 123456`);
-      } catch (e) { console.error(e); alert("שגיאה ביצירת איש צוות"); }
-  };
+  const handleAddStaff = async () => { if (!newStaffName.trim() || !newStaffEmail.trim()) { alert("חובה למלא שם ואימייל"); return; } const newId = "staff_" + Math.floor(100000 + Math.random() * 900000); try { await setDoc(doc(db, "staff", newId), { name: newStaffName, role: newStaffRole, phone: newStaffPhone, email: newStaffEmail.toLowerCase(), password: "123456", isFirstLogin: true, avatarUrl: newStaffAvatar, createdAt: new Date() }); setShowAddStaffModal(false); setNewStaffName(""); setNewStaffRole(""); setNewStaffPhone(""); setNewStaffEmail(""); setNewStaffAvatar(""); alert(`עובד נוצר בהצלחה!\nמשתמש: ${newStaffEmail}\nסיסמה: 123456`); } catch (e) { console.error(e); alert("שגיאה ביצירת איש צוות"); } };
 
   const copyLink = (clientId: string) => { navigator.clipboard.writeText(`${window.location.origin}/magic/${clientId}`); alert("הקישור הועתק!"); };
   const copyStaffLink = (staffId: string) => { navigator.clipboard.writeText(`${window.location.origin}/staff/login`); alert("הקישור לדף הכניסה הועתק!"); };
+  const handleApproveOrder = async () => { if (!selectedClientId || detectedOrder.length === 0) return; const clientName = clients.find(c => c.id === selectedClientId)?.name || "לקוח"; await addDoc(collection(db, "orders"), { clientId: selectedClientId, clientName: clientName, items: detectedOrder, status: "new", timestamp: new Date() }); const summary = detectedOrder.map(item => `${item.quantity} ${item.name}`).join(", "); await addDoc(collection(db, `chats/${selectedClientId}/messages`), { text: `✅ הזמנה נקלטה!\n${summary}`, sender: "server", timestamp: new Date(), type: "text" }); setDetectedOrder([]); alert("ההזמנה נשמרה ומופיעה כסטורי פעיל!"); };
 
-  const handleApproveOrder = async () => { 
-      if (!selectedClientId || detectedOrder.length === 0) return; 
-      const clientName = clients.find(c => c.id === selectedClientId)?.name || "לקוח"; 
-      
-      await addDoc(collection(db, "orders"), { 
-          clientId: selectedClientId, 
-          clientName: clientName, 
-          items: detectedOrder, 
-          status: "new", 
-          timestamp: new Date() 
-      }); 
-      
-      const summary = detectedOrder.map(item => `${item.quantity} ${item.name}`).join(", ");
-      await addDoc(collection(db, `chats/${selectedClientId}/messages`), { text: `✅ הזמנה נקלטה!\n${summary}`, sender: "server", timestamp: new Date(), type: "text" }); 
-      
-      setDetectedOrder([]); 
-      alert("ההזמנה נשמרה ומופיעה כסטורי פעיל!"); 
-  };
+  const openStatusStory = (order: SavedOrder) => { setSelectedStoryOrder(order); setShowStatusModal(true); };
+  const updateStoryStatus = async (newStatus: string) => { if (!selectedStoryOrder) return; await updateDoc(doc(db, "orders", selectedStoryOrder.id), { status: newStatus }); let msg = ""; if (newStatus === "processing") msg = "👷 ההזמנה שלך בליקוט"; if (newStatus === "shipped") msg = "🚚 ההזמנה יצאה לדרך!"; if (newStatus === "delivered") msg = "✅ ההזמנה נמסרה."; if (msg) { await addDoc(collection(db, `chats/${selectedStoryOrder.clientId}/messages`), { text: msg, sender: "server", timestamp: new Date(), type: "text" }); } setShowStatusModal(false); };
+  const getStoryColor = (status: string) => { if (status === "new") return "from-blue-500 to-blue-300"; if (status === "processing") return "from-orange-500 to-yellow-300"; if (status === "shipped") return "from-purple-500 to-pink-300"; return "from-gray-300 to-gray-400"; };
 
-  const openStatusStory = (order: SavedOrder) => {
-      setSelectedStoryOrder(order);
-      setShowStatusModal(true);
-  };
-
-  const updateStoryStatus = async (newStatus: string) => {
-      if (!selectedStoryOrder) return;
-      await updateDoc(doc(db, "orders", selectedStoryOrder.id), { status: newStatus });
-      let msg = "";
-      if (newStatus === "processing") msg = "👷 ההזמנה שלך בליקוט";
-      if (newStatus === "shipped") msg = "🚚 ההזמנה יצאה לדרך!";
-      if (newStatus === "delivered") msg = "✅ ההזמנה נמסרה.";
-      if (msg) { await addDoc(collection(db, `chats/${selectedStoryOrder.clientId}/messages`), { text: msg, sender: "server", timestamp: new Date(), type: "text" }); }
-      setShowStatusModal(false);
-  };
-
-  const getStoryColor = (status: string) => {
-      if (status === "new") return "from-blue-500 to-blue-300";
-      if (status === "processing") return "from-orange-500 to-yellow-300";
-      if (status === "shipped") return "from-purple-500 to-pink-300";
-      return "from-gray-300 to-gray-400";
-  };
-
-  // --- PDF Signing ---
-  const handleSignAndSave = async () => {
-    if (!pdfToSign || !currentOrderIdForSign) return;
-    setIsSigning(true);
-    try {
-        const pdfBytes = await pdfToSign.arrayBuffer();
-        const pdfDoc = await PDFDocument.load(pdfBytes);
-        const fontUrl = window.location.origin + '/rubik.ttf';
-        let fontBytes;
-        try { fontBytes = await fetch(fontUrl).then(res => { if (!res.ok) throw new Error("Missing font"); return res.arrayBuffer(); }); } 
-        catch (e) { alert("שגיאה: פונט חסר."); setIsSigning(false); return; }
-
-        pdfDoc.registerFontkit(fontkit);
-        const hebrewFont = await pdfDoc.embedFont(fontBytes);
-        const pages = pdfDoc.getPages();
-        const firstPage = pages[0];
-        
-        const smartDraw = (text: string, x: number, y: number) => {
-            if (!text) return;
-            const hasHebrew = /[\u0590-\u05FF]/.test(text);
-            const finalText = hasHebrew ? text.split('').reverse().join('') : text;
-            firstPage.drawText(finalText, { x, y, size: 10, font: hebrewFont, color: rgb(0, 0, 0) });
-        };
-        
-        smartDraw(logistics.unloadingStart, 390, 215); smartDraw(logistics.unloadingEnd, 490, 215);
-        smartDraw(logistics.waitingStart, 90, 215); smartDraw(logistics.waitingEnd, 160, 215);
-        smartDraw(logistics.craneStart, 390, 195); smartDraw(logistics.craneEnd, 490, 195);
-        if (logistics.craneType === "15m") smartDraw("X", 265, 195);
-        if (logistics.craneType === "9m") smartDraw("X", 175, 195);
-        const retY = 168;
-        smartDraw(logistics.retBigBag, 530, retY); smartDraw(logistics.retBarrel, 460, retY); smartDraw(logistics.retPallet, 390, retY); smartDraw(logistics.retBlockPallet, 290, retY); smartDraw(logistics.retOther, 160, retY);
-        const credY = 148;
-        smartDraw(logistics.credBigBag, 530, credY); smartDraw(logistics.credBarrel, 460, credY); smartDraw(logistics.credPallet, 390, credY); smartDraw(logistics.credBlockPallet, 290, credY); smartDraw(logistics.credOther, 160, credY);
-        smartDraw(logistics.repName, 250, 60);
-
-        const signatureDataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
-        const signatureImageBytes = await fetch(signatureDataUrl).then(res => res.arrayBuffer());
-        const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
-        firstPage.drawImage(signatureImage, { x: 60, y: 35, width: 100, height: 50 });
-
-        const signedPdfBytes = await pdfDoc.save();
-        const base64Pdf = Buffer.from(signedPdfBytes).toString('base64');
-        const response = await fetch(GAS_URL, { redirect: "follow", method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ file: base64Pdf, filename: `signed_delivery_${currentOrderIdForSign}.pdf`, mimeType: "application/pdf" }) });
-        const data = await response.json();
-        
-        if (data.status === "success") { await updateDoc(doc(db, "orders", currentOrderIdForSign), { signedPdfUrl: data.url, status: "delivered" }); alert("המסמך נחתם והנתונים מולאו בהצלחה!"); setShowSignModal(false); } else { throw new Error("Upload failed on server"); }
-    } catch (error) { console.error(error); alert("שגיאה בתהליך: " + error); } finally { setIsSigning(false); }
-  };
+  const handleSignAndSave = async () => { if (!pdfToSign || !currentOrderIdForSign) return; setIsSigning(true); try { const pdfBytes = await pdfToSign.arrayBuffer(); const pdfDoc = await PDFDocument.load(pdfBytes); const fontUrl = window.location.origin + '/rubik.ttf'; let fontBytes; try { fontBytes = await fetch(fontUrl).then(res => { if (!res.ok) throw new Error("Missing font"); return res.arrayBuffer(); }); } catch (e) { alert("שגיאה: פונט חסר."); setIsSigning(false); return; } pdfDoc.registerFontkit(fontkit); const hebrewFont = await pdfDoc.embedFont(fontBytes); const pages = pdfDoc.getPages(); const firstPage = pages[0]; const smartDraw = (text: string, x: number, y: number) => { if (!text) return; const hasHebrew = /[\u0590-\u05FF]/.test(text); const finalText = hasHebrew ? text.split('').reverse().join('') : text; firstPage.drawText(finalText, { x, y, size: 10, font: hebrewFont, color: rgb(0, 0, 0) }); }; smartDraw(logistics.unloadingStart, 390, 215); smartDraw(logistics.unloadingEnd, 490, 215); smartDraw(logistics.waitingStart, 90, 215); smartDraw(logistics.waitingEnd, 160, 215); smartDraw(logistics.craneStart, 390, 195); smartDraw(logistics.craneEnd, 490, 195); if (logistics.craneType === "15m") smartDraw("X", 265, 195); if (logistics.craneType === "9m") smartDraw("X", 175, 195); const retY = 168; smartDraw(logistics.retBigBag, 530, retY); smartDraw(logistics.retBarrel, 460, retY); smartDraw(logistics.retPallet, 390, retY); smartDraw(logistics.retBlockPallet, 290, retY); smartDraw(logistics.retOther, 160, retY); const credY = 148; smartDraw(logistics.credBigBag, 530, credY); smartDraw(logistics.credBarrel, 460, credY); smartDraw(logistics.credPallet, 390, credY); smartDraw(logistics.credBlockPallet, 290, credY); smartDraw(logistics.credOther, 160, credY); smartDraw(logistics.repName, 250, 60); const signatureDataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png'); const signatureImageBytes = await fetch(signatureDataUrl).then(res => res.arrayBuffer()); const signatureImage = await pdfDoc.embedPng(signatureImageBytes); firstPage.drawImage(signatureImage, { x: 60, y: 35, width: 100, height: 50 }); const signedPdfBytes = await pdfDoc.save(); const base64Pdf = Buffer.from(signedPdfBytes).toString('base64'); const response = await fetch(GAS_URL, { redirect: "follow", method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ file: base64Pdf, filename: `signed_delivery_${currentOrderIdForSign}.pdf`, mimeType: "application/pdf" }) }); const data = await response.json(); if (data.status === "success") { await updateDoc(doc(db, "orders", currentOrderIdForSign), { signedPdfUrl: data.url, status: "delivered" }); alert("המסמך נחתם והנתונים מולאו בהצלחה!"); setShowSignModal(false); } else { throw new Error("Upload failed on server"); } } catch (error) { console.error(error); alert("שגיאה בתהליך: " + error); } finally { setIsSigning(false); } };
   const openSignModal = (orderId: string) => { setCurrentOrderIdForSign(orderId); setPdfToSign(null); setShowSignModal(true); };
   const updateOrderStatus = async (orderId: string, clientId: string, newStatus: string) => { await updateDoc(doc(db, "orders", orderId), { status: newStatus }); let statusMsg = ""; if (newStatus === "shipped") statusMsg = "🚚 ההזמנה בדרך"; if (statusMsg) await addDoc(collection(db, `chats/${clientId}/messages`), { text: statusMsg, sender: "server", timestamp: new Date(), type: "text" }); };
   const handleLogisticsChange = (field: string, value: string) => { setLogistics(prev => ({ ...prev, [field]: value })); };
@@ -420,8 +111,6 @@ export default function StaffDashboard() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-900 font-sans" dir="rtl">
-      
-      {/* סרגל צד */}
       <div className="w-1/4 bg-white border-l border-gray-300 flex flex-col hidden md:flex z-20 shadow-lg">
         <div className="p-4 bg-[#008069] text-white flex justify-between items-center shadow-md">
             <div className="flex items-center gap-2">
@@ -434,10 +123,7 @@ export default function StaffDashboard() {
         <div className="flex-1 overflow-y-auto">{clients.map(client => (<div key={client.id} onClick={() => setSelectedClientId(client.id)} className={`p-4 border-b cursor-pointer hover:bg-green-50 transition-all group ${selectedClientId === client.id ? 'bg-green-100 border-r-4 border-r-green-600' : ''}`}><div className="flex justify-between items-center w-full"><div className="flex items-center gap-3">{client.avatarUrl ? <img src={client.avatarUrl} className="w-8 h-8 rounded-full object-cover"/> : <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center font-bold text-xs">{client.name[0]}</div>}<div><div className="font-bold text-sm">{client.name}</div><div className="text-xs text-gray-500">{client.projectName}</div></div></div><button onClick={(e) => { e.stopPropagation(); copyLink(client.id); }} className="text-gray-400 hover:text-blue-600 bg-white p-2 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all border border-gray-100 hover:border-blue-200" title="העתק לינק קסם ללקוח"><Link size={14}/></button></div></div>))}</div>
       </div>
 
-      {/* מרכז */}
       <div className="flex-1 flex flex-col bg-[#efeae2] relative">
-         
-         {/* סטוריז */}
          <div className="bg-white border-b border-gray-200 p-4 shadow-sm z-10">
              <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2">
                  <div className="flex flex-col items-center gap-1 min-w-[60px] cursor-pointer" onClick={() => setActiveTab("orders")}>
@@ -459,7 +145,6 @@ export default function StaffDashboard() {
              </div>
          </div>
 
-         {/* כותרת */}
          <div className="bg-white/80 backdrop-blur-md p-2 shadow-sm flex justify-between items-center z-10 px-6 border-b border-gray-100">
              <div className="flex items-center gap-4">
                  <div className="font-bold text-lg">{selectedClientId ? clients.find(c => c.id === selectedClientId)?.name : (activeTab === "inventory" ? "ניהול מלאי" : "דשבורד")}</div>
@@ -497,56 +182,34 @@ export default function StaffDashboard() {
                 </div>
                 
                 <div className={`bg-white p-3 flex gap-2 border-t transition-colors ${isInternalMode ? 'bg-yellow-50' : ''} relative`}>
-                    
-                    {/* 🔥 חלון הצעות (Autocomplete) 🔥 */}
                     {chatSuggestions.length > 0 && (
                         <div className="absolute bottom-16 left-2 right-2 bg-white border border-gray-200 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto animate-in slide-in-from-bottom-2">
                             <div className="bg-gray-50 px-3 py-1 text-[10px] text-gray-500 font-bold border-b">הצעות מוצרים</div>
                             {chatSuggestions.map(prod => (
-                                <div 
-                                    key={prod.id} 
-                                    onClick={() => selectChatSuggestion(prod)}
-                                    className="p-3 border-b last:border-0 hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors"
-                                >
+                                <div key={prod.id} onClick={() => selectChatSuggestion(prod)} className="p-3 border-b last:border-0 hover:bg-blue-50 cursor-pointer flex items-center gap-3 transition-colors">
                                     {prod.imageUrl ? <img src={prod.imageUrl} className="w-8 h-8 rounded object-cover"/> : <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center"><Box size={14}/></div>}
-                                    <div className="flex-1">
-                                        <div className="text-sm font-bold text-gray-800">{prod.name}</div>
-                                        <div className="text-xs text-gray-500">{prod.sku}</div>
-                                    </div>
+                                    <div className="flex-1"><div className="text-sm font-bold text-gray-800">{prod.name}</div><div className="text-xs text-gray-500">{prod.sku}</div></div>
                                     <Plus size={16} className="text-blue-500"/>
                                 </div>
                             ))}
                         </div>
                     )}
-
                     <button onClick={() => setIsInternalMode(!isInternalMode)} className={`p-2 rounded-full transition-all ${isInternalMode ? 'bg-yellow-400 text-yellow-900 rotate-180' : 'bg-gray-100 text-gray-500'}`} title={isInternalMode ? "מצב סמוי פעיל" : "הפעל מצב סמוי"} >{isInternalMode ? <EyeOff size={20}/> : <Eye size={20}/>}</button>
-                    
-                    {/* תיבת טקסט עם האזנה לשינויים */}
-                    <input 
-                        value={reply} 
-                        onChange={(e) => handleChatInputChange(e.target.value)} 
-                        onKeyDown={(e) => e.key === 'Enter' && handleSendReply()} 
-                        className={`flex-1 p-3 rounded-full outline-none border focus:ring-1 ${isInternalMode ? 'bg-white border-yellow-400 focus:border-yellow-500 focus:ring-yellow-500 placeholder-yellow-600' : 'bg-gray-50 border-gray-200 focus:border-green-500'}`} 
-                        placeholder={isInternalMode ? `🔒 הודעה פנימית...` : `הגב בתור ${currentUser?.name || 'מנהל'}...`} 
-                    />
+                    <input value={reply} onChange={(e) => handleChatInputChange(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendReply()} className={`flex-1 p-3 rounded-full outline-none border focus:ring-1 ${isInternalMode ? 'bg-white border-yellow-400 focus:border-yellow-500 focus:ring-yellow-500 placeholder-yellow-600' : 'bg-gray-50 border-gray-200 focus:border-green-500'}`} placeholder={isInternalMode ? `🔒 הודעה פנימית...` : `הגב בתור ${currentUser?.name || 'מנהל'}...`} />
                     <button onClick={handleSendReply} className={`p-3 rounded-full text-white shadow-lg transition-colors ${isInternalMode ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-[#008069] hover:bg-[#006a57]'}`}>{isInternalMode ? <Lock size={20}/> : <Send size={20} />}</button>
                 </div>
             </>
          )}
 
-         {/* שאר הלשוניות */}
          {activeTab === "inventory" && (<div className="flex-1 overflow-y-auto p-8 bg-gray-50"><div className="max-w-5xl mx-auto"><div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold flex items-center gap-2"><Box className="text-orange-600"/> ניהול מלאי</h2><button onClick={() => setShowAddProductModal(true)} className="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-700 flex items-center gap-2 shadow-lg"><Plus size={20}/> הוסף מוצר</button></div><div className="grid grid-cols-1 gap-3"><div className="grid grid-cols-12 gap-4 bg-gray-200 p-3 rounded-t-lg font-bold text-gray-600 text-sm"><div className="col-span-1">תמונה</div><div className="col-span-2">מק"ט</div><div className="col-span-4">שם המוצר</div><div className="col-span-2">קטגוריה</div><div className="col-span-2">מלאי</div><div className="col-span-1">פעולות</div></div>{inventory.map(prod => (<div key={prod.id} className="grid grid-cols-12 gap-4 bg-white p-3 border-b border-gray-100 items-center hover:bg-orange-50 transition text-sm group"><div className="col-span-1 relative">{prod.imageUrl ? <img src={prod.imageUrl} className="w-10 h-10 rounded-md object-cover border group-hover:scale-150 transition-transform origin-left z-10"/> : <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center"><Box size={16} className="text-gray-400"/></div>}</div><div className="col-span-2 font-mono text-gray-500">{prod.sku}</div><div className="col-span-4 flex flex-col"><span className="font-bold text-gray-800">{prod.name}</span><div className="flex gap-1 mt-1">{prod.name.split(' ').filter(w=>w.length>1).map((w,i) => <span key={i} className="text-[10px] bg-blue-50 text-blue-600 px-1 rounded">{w}</span>)}</div></div><div className="col-span-2"><span className="bg-gray-100 px-2 py-1 rounded-md text-xs">{prod.category}</span></div><div className="col-span-2 font-bold flex items-center gap-2">{prod.stock} יח' {prod.stock < 10 && <AlertTriangle size={12} className="text-red-500"/>}</div><div className="col-span-1 text-center"><button className="text-gray-400 hover:text-red-500" onClick={async () => { if(confirm("למחוק?")) await deleteDoc(doc(db, "inventory", prod.id)) }}><Trash2 size={16}/></button></div></div>))}</div></div></div>)}
          {activeTab === "team" && (<div className="flex-1 overflow-y-auto p-8 bg-gray-50"><div className="max-w-4xl mx-auto"><div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold flex items-center gap-2"><UserCog className="text-purple-600"/> ניהול הצוות</h2><button onClick={() => setShowAddStaffModal(true)} className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-purple-700 flex items-center gap-2 shadow-lg"><Plus size={20}/> הוסף איש צוות</button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{staffMembers.map(staff => (<div key={staff.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4 relative group">{staff.avatarUrl ? <img src={staff.avatarUrl} className="w-16 h-16 rounded-full object-cover border-2 border-purple-100"/> : <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center font-bold text-2xl text-purple-600">{staff.name[0]}</div>}<div><div className="font-bold text-lg">{staff.name}</div><div className="text-sm text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-md w-fit mb-1">{staff.role}</div><div className="text-xs text-gray-500 flex flex-col gap-1"><span className="flex items-center gap-1"><Phone size={12}/> {staff.phone}</span><span className="flex items-center gap-1"><Mail size={12}/> {staff.email}</span></div></div><button onClick={() => copyStaffLink(staff.id)} className="absolute top-4 left-4 text-gray-400 hover:text-purple-600 bg-gray-50 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all" title="העתק לינק כניסה לצוות"><Copy size={18}/></button></div>))}</div></div></div>)}
          {activeTab === "orders" && (<div className="flex-1 overflow-y-auto p-6 bg-gray-50"><h3 className="text-2xl font-bold mb-6 text-gray-800">📋 ריכוז הזמנות</h3><div className="space-y-4">{ordersList.map(order => (<div key={order.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200"><div className="flex justify-between items-start mb-4 border-b pb-3"><div><div className="font-bold text-lg text-gray-900">{order.clientName}</div><div className="text-sm text-gray-500">{order.timestamp?.seconds ? new Date(order.timestamp.seconds * 1000).toLocaleDateString() : ''}</div></div><div className={`px-3 py-1 rounded-full text-xs font-bold border ${STATUS_COLORS[order.status]}`}>{STATUS_LABELS[order.status]}</div></div><div className="bg-gray-50 p-3 rounded-lg mb-4">{order.items.map((item, idx) => (<div key={idx} className="flex justify-between text-sm py-1 border-b last:border-0 border-gray-200"><span className="font-medium text-gray-800">{item.name} <span className="text-xs text-gray-400">({item.sku})</span></span><span className="font-bold">{item.quantity} יח'</span></div>))}</div><div className="flex gap-2 justify-end items-center border-t pt-3">{order.signedPdfUrl ? (<a href={order.signedPdfUrl} target="_blank" className="flex items-center gap-2 text-green-700 bg-green-50 px-3 py-2 rounded-lg font-bold border border-green-200 hover:bg-green-100"><FileSignature size={18} /> צפה בתעודה חתומה</a>) : (<button onClick={() => openSignModal(order.id)} className="flex items-center gap-2 text-blue-700 bg-blue-50 px-3 py-2 rounded-lg font-bold border border-blue-200 hover:bg-blue-100"><FileText size={18} /> ייבא והחתם נהג</button>)}<div className="w-px h-6 bg-gray-300 mx-2"></div><button onClick={() => updateOrderStatus(order.id, order.clientId, "processing")} className="text-xs px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-md font-bold flex items-center gap-1"><Package size={14}/> בטיפול</button><button onClick={() => updateOrderStatus(order.id, order.clientId, "shipped")} className="text-xs px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-md font-bold flex items-center gap-1"><Truck size={14}/> יצא למשלוח</button></div></div>))}</div></div>)}
       </div>
 
-      {/* פאנל טיוטה עם אזור התלבטויות */}
       {activeTab === "chat" && selectedClientId && (
           <div className="w-1/4 bg-white border-r border-gray-300 p-5 flex flex-col shadow-2xl z-20">
             <h3 className="font-extrabold text-xl mb-4 flex items-center gap-2 text-gray-800 border-b pb-3"><Package className="text-orange-600" /> טיוטה חדשה</h3>
             <button onClick={() => setShowSmartListModal(true)} className="w-full mb-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-lg flex items-center justify-center gap-2 border border-gray-300 shadow-sm transition-all"><Edit size={16}/> ערוך / הוסף פריטים</button>
-            
-            {/* 🔥 אזור בירור פריטים דו-משמעיים 🔥 */}
             {ambiguousItems.length > 0 && (
                 <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 shadow-inner animate-in fade-in slide-in-from-top-2">
                     <div className="flex items-center gap-2 text-yellow-800 font-bold text-sm mb-2"><HelpCircle size={16}/> נדרש בירור</div>
@@ -555,13 +218,7 @@ export default function StaffDashboard() {
                             <p className="text-xs text-gray-600 mb-1">לאיזה <b>"{amb.originalText}"</b> הכוונה? (כמות: {amb.quantity})</p>
                             <div className="flex flex-wrap gap-1">
                                 {amb.options.map(opt => (
-                                    <button 
-                                        key={opt.id} 
-                                        onClick={() => resolveAmbiguity(idx, opt)}
-                                        className="text-xs bg-white border border-yellow-300 hover:bg-yellow-100 px-2 py-1 rounded-md shadow-sm transition-colors text-yellow-900"
-                                    >
-                                        {opt.name}
-                                    </button>
+                                    <button key={opt.id} onClick={() => resolveAmbiguity(idx, opt)} className="text-xs bg-white border border-yellow-300 hover:bg-yellow-100 px-2 py-1 rounded-md shadow-sm transition-colors text-yellow-900">{opt.name}</button>
                                 ))}
                                 <button onClick={() => removeAmbiguity(idx)} className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-md text-gray-600"><X size={12}/></button>
                             </div>
@@ -569,7 +226,6 @@ export default function StaffDashboard() {
                     ))}
                 </div>
             )}
-
             {detectedOrder.length > 0 ? (
                 <div className="flex-1 flex flex-col">
                     <div className="space-y-3 flex-1 overflow-y-auto">{detectedOrder.map((item, idx) => (<div key={idx} className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm group"><div><div className="font-bold text-gray-900">{item.name}</div><div className="text-xs text-gray-500">{item.sku}</div></div><div className="flex items-center gap-2"><input type="number" value={item.quantity} onChange={(e) => updateQuantity(idx, parseInt(e.target.value))} className="w-14 text-center border rounded py-1 font-bold outline-none focus:ring-1 ring-orange-500"/><button onClick={() => removeItem(idx)} className="text-gray-300 hover:text-red-500"><Trash2 size={16}/></button></div></div>))}</div>
@@ -579,8 +235,6 @@ export default function StaffDashboard() {
           </div>
       )}
       
-      {/* מודלים */}
-      {/* 🔥 מודל סטטוס הזמנה (סטורי) 🔥 */}
       {showStatusModal && selectedStoryOrder && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in-95">
               <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm relative">
@@ -590,7 +244,6 @@ export default function StaffDashboard() {
                       <div className="text-2xl font-bold text-gray-800">{selectedStoryOrder.clientName}</div>
                       <div className="text-xs text-gray-400 mt-1">{new Date(selectedStoryOrder.timestamp?.seconds * 1000).toLocaleString()}</div>
                   </div>
-                  
                   <div className="space-y-3">
                       <button onClick={() => updateStoryStatus("processing")} className="w-full p-4 rounded-xl bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold flex items-center gap-3 transition-all"><Package/> בליקוט (בהכנה)</button>
                       <button onClick={() => updateStoryStatus("shipped")} className="w-full p-4 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold flex items-center gap-3 transition-all"><Truck/> יצא לדרך (משלוח)</button>
