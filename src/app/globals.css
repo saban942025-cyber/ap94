@@ -1,40 +1,48 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* אנחנו מגדירים את הצבעים ישירות על ה-HTML כדי לעקוף תקלות */
 :root {
-  --app-bg: #efeae2; /* צבע רקע קרם/וואטסאפ */
-  --app-width: 480px; /* רוחב מקסימלי למובייל */
+  --background: #efeae2; /* צבע הרקע הראשי */
+  --foreground: #111827;
+}
+
+/* הגדרת גובה מלא לדף כדי למנוע פסים לבנים */
+html, body {
+  height: 100%;
+  background-color: var(--background);
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  background-color: #d1d7db; /* רקע אפור למסכים גדולים (כמו בווטסאפ ווב) */
-  font-family: system-ui, -apple-system, sans-serif;
-  display: flex;
-  justify-content: center;
-  min-height: 100vh;
+  color: var(--foreground);
+  font-family: var(--font-rubik), sans-serif;
+  /* מניעת קפיצות גלילה במובייל */
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* זה הקלאס שיהפוך את האתר לאפליקציה */
-.mobile-container {
-  width: 100%;
-  max-width: var(--app-width);
-  background-color: var(--app-bg);
-  min-height: 100vh;
-  box-shadow: 0 0 20px rgba(0,0,0,0.1);
-  position: relative;
-  display: flex;
-  flex-direction: column;
+/* טיפול במגרעת (Notch) */
+.safe-area-view {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
-/* תיקון כפתורים וטקסטים */
-button {
-  cursor: pointer;
+/* ביטול הבהוב בלחיצה במובייל */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* הסתרת פס גלילה */
+/* עיצוב פס גלילה עדין */
 ::-webkit-scrollbar {
-  width: 0px;
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c4b5a3;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
   background: transparent;
 }
