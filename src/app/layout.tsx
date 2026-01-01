@@ -62,6 +62,14 @@ export default function RootLayout({
            {children}
         </main>
       </body>
+      <body className={`${rubik.className} antialiased h-full safe-area-view`}>
+  {/* 👇 הוסף את השורה הזו לבדיקה 👇 */}
+  <div style={{ padding: '20px', backgroundColor: 'red', color: 'white', fontSize: '24px', position: 'fixed', top: 0, left: 0, zIndex: 99999 }}>
+    בדיקת מערכת: האתר חי!
+  </div>
+  {/* 👆 סוף בדיקה 👆 */}
+  
+  {children}
     </html>
   );
 }
