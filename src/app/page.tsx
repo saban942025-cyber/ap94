@@ -58,7 +58,9 @@ export default function ClientApp() {
           </div>
         </div>
       </main>
-
+<div className="fixed top-0 left-0 z-50 bg-red-600 text-white font-bold p-4 w-full text-center">
+  אם אתה רואה את זה אדום - Tailwind עובד!
+</div>
       <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 safe-area-view shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
         <div className="flex justify-around items-center h-16 max-w-7xl mx-auto">
           <button className="flex flex-col items-center text-[#008069]"><Home size={24}/><span className="text-[10px]">ראשי</span></button>
