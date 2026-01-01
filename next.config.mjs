@@ -1,11 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',  // <--- זה הפקודה הקריטית! מייצר תיקיית "out"
+  output: 'export',      // <--- חובה! זה מייצר את תיקיית "out" הסטטית
   images: {
-    unoptimized: true, // חובה ב-Static Export (אחרת תמונות ישברו)
+    unoptimized: true,   // חובה! מונע שבירת תמונות בייצוא סטטי
   },
   eslint: {
-    ignoreDuringBuilds: true, // מונע עצירה בגלל שגיאות קטנות
+    ignoreDuringBuilds: true, // מונע עצירה של הבנייה בגלל שטויות
   },
 };
 
