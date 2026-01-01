@@ -3,8 +3,8 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
+// הקונפיגורציה המעודכנת ששלחת
 const firebaseConfig = {
-  // חובה: וודא שהמפתח כאן הוא האמיתי שמתחיל ב-AIza
   apiKey: "AIzaSyC2QjUvjfALcuoM1xZMVDIXcNpwCG1-tE8",
   authDomain: "saban-system-v2.firebaseapp.com",
   projectId: "saban-system-v2",
@@ -14,9 +14,10 @@ const firebaseConfig = {
   measurementId: "G-9JNS1ZJLDX"
 };
 
-// Singleton Pattern למניעת קריסות ב-Next.js
+// Singleton Pattern: מונע אתחול כפול ב-Next.js
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
+// ייצוא השירותים לשאר האפליקציה
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
