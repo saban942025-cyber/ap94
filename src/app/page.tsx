@@ -1,75 +1,116 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Truck, Home, User, Package, MessageCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { Order, Container } from '@/lib/types';
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סבן 94 - הזמנה חכמה</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-export default function ClientApp() {
-  const [loading, setLoading] = useState(true);
-  const [activeOrder, setActiveOrder] = useState<any>(null);
+        // ה-Config ששלחת לי (מאובטח בתוך המודול)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2QjUvjfALcuoM1xZMVDIXcNpwCG1-tE8",
+            authDomain: "saban-system-v2.firebaseapp.com",
+            projectId: "saban-system-v2",
+            storageBucket: "saban-system-v2.firebasestorage.app",
+            messagingSenderId: "670637185194",
+            appId: "1:670637185194:web:e897482997e75c110898d3",
+            measurementId: "G-9JNS1ZJLDX"
+        };
 
-  useEffect(() => {
-    // מאזין להזמנה אחרונה של לקוח 123 (זמני)
-    const q = query(collection(db, 'orders'), orderBy('timestamp', 'desc'), limit(1));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const data = snapshot.docs[0].data();
-        setActiveOrder({ id: snapshot.docs[0].id, ...data });
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-[#efeae2]"><Loader2 className="animate-spin text-[#008069] w-10 h-10"/></div>;
+        // פונקציית שליחת הזמנה
+        async function sendOrder() {
+            const name = document.getElementById('customerName').value;
+            const orderDetails = document.getElementById('orderDetails').value;
+            const type = document.getElementById('orderType').value;
+            const address = document.getElementById('address').value;
 
-  return (
-    <div className="min-h-screen bg-[#efeae2] pb-24 text-gray-800 font-sans">
-      <header className="bg-[#008069] text-white p-4 shadow-md sticky top-0 z-10 safe-area-view">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-lg font-bold">ר</div>
-            <div><h1 className="font-bold text-lg">סבן מערכות</h1><p className="text-xs opacity-80 text-white">שלום, רמי קבלן</p></div>
-          </div>
-          <button className="bg-white/20 p-2 rounded-full"><MessageCircle size={20} /></button>
-        </div>
-      </header>
+            if(!name || !orderDetails) {
+                alert("אחי, תמלא שם ופרטי הזמנה");
+                return;
+            }
 
-      <main className="p-4 max-w-7xl mx-auto space-y-4">
-        {/* ווידג'ט הזמנה חיה */}
-        {activeOrder ? (
-          <div className="bg-white rounded-xl p-4 shadow-sm border-r-4 border-[#008069] relative">
-             <div className="absolute top-0 left-0 bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded-br-lg font-bold">סטטוס חי</div>
-             <div className="flex justify-between items-start mb-3">
-               <div><h3 className="font-bold text-gray-800 text-lg">הזמנה פעילה</h3><p className="text-gray-500 text-sm">{new Date(activeOrder.timestamp?.seconds * 1000).toLocaleDateString()}</p></div>
-               <div className="bg-[#e7fce3] text-[#008069] px-3 py-1 rounded-full text-xs font-bold shadow-sm">{activeOrder.status === 'new' ? 'התקבל' : activeOrder.status === 'processing' ? 'בטיפול' : 'נמסר'}</div>
-             </div>
-             <div className="bg-gray-50 p-2 rounded text-sm mb-2">{activeOrder.items?.map((i:any,idx:number)=><div key={idx}>{i.quantity} {i.name}</div>)}</div>
-          </div>
-        ) : <div className="bg-white p-6 text-center rounded-xl shadow-sm">אין הזמנות פעילות</div>}
+            try {
+                // 1. שמירה ב-Firebase לתיעוד
+                const docRef = await addDoc(collection(db, "orders"), {
+                    customerName: name,
+                    type: type,
+                    details: orderDetails,
+                    address: address,
+                    status: "נשלח",
+                    timestamp: new Date()
+                });
 
-        {/* מד מכולה */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 mb-3"><Truck className="text-[#008069]" /><h2 className="font-bold text-gray-800">מכולה פעילה (הרצל 5)</h2></div>
-          <div className="relative pt-1">
-            <div className="flex mb-2 items-center justify-between"><div><span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-green-600 bg-green-200">בתוקף</span></div><div className="text-right"><span className="text-xs font-semibold inline-block text-green-600">נותרו 3 ימים</span></div></div>
-            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-green-100"><div style={{ width: "70%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#008069]"></div></div>
-          </div>
-        </div>
-      </main>
-<div className="fixed top-0 left-0 z-50 bg-red-600 text-white font-bold p-4 w-full text-center">
-  אם אתה רואה את זה אדום - Tailwind עובד!
-</div>
-      <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 safe-area-view shadow-[0_-5px_10px_rgba(0,0,0,0.05)]">
-        <div className="flex justify-around items-center h-16 max-w-7xl mx-auto">
-          <button className="flex flex-col items-center text-[#008069]"><Home size={24}/><span className="text-[10px]">ראשי</span></button>
-          <button className="flex flex-col items-center text-gray-400"><Package size={24}/><span className="text-[10px]">חומרים</span></button>
-          <div className="-mt-8 bg-[#008069] p-3 rounded-full text-white shadow-lg border-4 border-[#efeae2]"><Truck size={28} /></div>
-          <button className="flex flex-col items-center text-gray-400"><AlertCircle size={24}/><span className="text-[10px]">מכולות</span></button>
-          <button className="flex flex-col items-center text-gray-400"><User size={24}/><span className="text-[10px]">פרופיל</span></button>
-        </div>
-      </nav>
+                // 2. בניית הודעת ווטסאפ קטלנית
+                const whatsappMsg = `*הזמנה חדשה - סבן 94* 🚛\n\n*לקוח:* ${name}\n*סוג:* ${type}\n*פירוט:* ${orderDetails}\n*כתובת:* ${address}\n\n*מספר מעקב:* ${docRef.id}`;
+                const encodedMsg = encodeURIComponent(whatsappMsg);
+                const whatsappUrl = `https://wa.me/972508860896?text=${encodedMsg}`;
+
+                // 3. שיגור
+                window.open(whatsappUrl, '_blank');
+            } catch (e) {
+                console.error("שגיאה ברישום: ", e);
+                alert("הייתה בעיה בשמירה, נסה שוב");
+            }
+        }
+        window.sendOrder = sendOrder;
+    </script>
+
+    <style>
+        :root {
+            --wa-green: #25D366;
+            --wa-dark-green: #075E54;
+            --saban-yellow: #FFD700;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #E5DDD5; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .header { background-color: var(--wa-dark-green); color: white; padding: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .header img { border-radius: 50%; width: 40px; height: 40px; border: 2px solid var(--saban-yellow); }
+        .chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .bubble { background: white; padding: 15px; border-radius: 15px 0 15px 15px; max-width: 85%; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
+        .bubble::before { content: ""; position: absolute; top: 0; right: -10px; border: 10px solid transparent; border-top-color: white; border-left: 0; }
+        .input-area { background: #f0f0f0; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #ddd; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { background-color: var(--wa-green); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        button:hover { background-color: #128C7E; }
+        .saban-tag { color: var(--saban-yellow); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <img src="https://via.placeholder.com/40/000000/FFFF00?text=S94" alt="Logo">
+    <div>
+        <strong>סבן 94 - מחלקת הזמנות</strong><br>
+        <small>פעיל כעת</small>
     </div>
-  );
-}
+</div>
+
+<div class="chat-container">
+    <div class="bubble">
+        שלום! כאן המערכת החכמה של <span class="saban-tag">סבן חומרי בניין</span>. 🚛<br>
+        מלא את הפרטים למטה וההזמנה תתועד ותישלח אלינו לווטסאפ מיד.
+    </div>
+</div>
+
+<div class="input-area">
+    <input type="text" id="customerName" placeholder="שם הלקוח / חברה" required>
+    <select id="orderType">
+        <option value="חומרי בניין">🏗️ חומרי בניין</option>
+        <option value="הצבת מכולה">🗑️ הצבת מכולה</option>
+        <option value="החלפת מכולה">🔄 החלפת מכולה</option>
+        <option value="הוצאת מכולה">🚚 הוצאת מכולה</option>
+    </select>
+    <input type="text" id="address" placeholder="כתובת לאספקה / הצבה">
+    <textarea id="orderDetails" rows="3" placeholder="פירוט ההזמנה (למשל: 5 בלות חול, 20 שקי מלט...)"></textarea>
+    <button onclick="sendOrder()">
+        <span>שלח הזמנה לווטסאפ</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+</div>
+
+</body>
+</html>
